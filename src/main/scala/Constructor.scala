@@ -1,4 +1,6 @@
-
+/**
+ * Smart Constructor
+ */
 class ShoppingCartsInterpreter private(repo: ShoppingCartRepository)
   extends ShoppingCarts[ScRepoState] {
   // Functions implementation
