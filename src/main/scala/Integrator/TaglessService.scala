@@ -100,4 +100,81 @@ class UserFixtures(db: Database) extends BaseFixture(db) {
   //...
 }
 
-// ended at the class UserRepository
+class UserRepositorySpecs extends ItTest with OptionValues {
+  val repository = new UserRepository(new EmailRepository())
+  val fixture = new UserFixtures(db)
+  import fixture._
+  it should "insert user to database" in withRollback {
+    repository.createUser(
+      Email("john@example.com"),
+      UserProfile(
+        name = Some(Name("John")),
+        aboutMe = Some("I am John"),
+        birthdate = Some(Birthdate(LocalDate.of(1982, 11, 12))),
+        languagesSpoken = Some("Polish, English, German, Russian"),
+        language = Some(Language(new Locale("pl", "PL")))
+      )
+    )
+  }.map { fromDb =>
+    fromDb.primaryEmail shouldEqual "john@example.com"
+    val profile = fromDb.profile
+    profile.name.value shouldEqual "John"
+    profile.aboutMe.value shouldEqual "I am John"
+    profile.birthdate.value shouldEqual LocalDate.of(1982, 11, 12)
+    profile.languagesSpoken.value shouldEqual "Polish, English, German, Russian"
+    profile.language.value shouldEqual new Locale("pl, PL")
+  }
+  it should "identity user by email" in withUser(
+    mkUser("john@example.com",
+      userProfile = UserProfile(aboutMe = Some("I am John"),
+        language = Some(Language(Locale.US))))(_ =>
+    repository.identifyUser(Email("john@example.com"))).map {
+      case (maybeJohn, noOne) =>
+        noOne shouldBe empty
+        val john = maybeJohn.value
+        john.profile.aboutMe shouldEqual Some("I am John")
+        john.profile.language shouldEqual Some(Locale.US)
+        john.primaryEmail shouldEqual "john@example.com"
+    }
+    it should "get users by uid" in withUsers(
+      mkUser("user1@example.com"),
+      mkUser("user2@example.com")
+  ) {
+    case Seq(uid1, uid2) =>
+      repository.getUser(UID()) zip repository.
+        getUser(uid1) zip repository.
+        getUser(uid2)
+  }.map {
+    case ((noUser, user1), user2) =>
+      noUser shouldBe empty
+      user1.value.primaryEmail shouldEqual "user1@example.com"
+      user2.value.primaryEmail shouldEqual "user2@example.com"
+  }
+  class EmailRepositorySpecs extends ItTest
+                              with EitherValues
+                              with OptionValues {
+    val repository = new EmailIdentityRepository
+    val fixture = new EmailFixtures(db)
+    import fixture._
+    it should "save email to the db" in withRollback {
+      repository.save(mkEmail("wannabe.user@example.com"))
+    }.map { errorOrEmail =>
+      val fromDb = errorOrEmail.right.value
+      fromDb shouldEqual "wannabe.user@example.com"
+    }
+    it should "not save email if it already exists" in withEmail(
+      "wannabe.user@example.com") {
+      repository.save(mkEmail("wannabe.user@example.com"))
+    }.map { errorOrEmail =>
+      val fromDB = errorOrEmail.left.value
+      fromDb shouldEqual EmailAlreadyExists
+    }
+    it should "check if email is known" in withEmail("wannabe.user@example.com")
+     repository.known(Email("wannabe.user@example.com")) zip repository.known(
+       Email("user@example.com").map {
+         case(known, unknown))) =>
+           known shouldBe true
+           unknown shouldBe false
+       }
+  }
+}
