@@ -1,30 +1,68 @@
-import Cart.ShoppingCart.ShoppingCart
-import cats.data.State
+import Cart.ShoppingCart.{ShoppingCart, UserId, UserProfile}
+import cats.MonadError
+import cats.data.{EitherT, State}
 
-// below is the algebra/interface for the project -> mimicking the generic state of the production object
-trait ShoppingCarts[F[_]] {
-  def create(id: String): F[Unit]
-  def find(id: String): F[Option[ShoppingCart]]
+/**
+ * By splitting the Algebra/Interface into component parts, it allows us to compartmentalise the IO Testing
+ */
+trait Create[F[_]] {
+  def create(userId: UserId): F[Unit]
+}
+
+trait Find[F[_]] {
+  def find(userId: UserId): F[Option[ShoppingCart]]
+}
+
+trait FinalSc[F[_]] {
   def add(sc: ShoppingCart, product: Product): F[ShoppingCart]
 }
 
-// the top repo is just an easy to understand DB interaction
-type ShoppingCartRepository = Map[String, ShoppingCart]
-type ScRepoState[A] = State[ShoppingCartRepository, A]
-
-/**
- * Smart Constructor
- */
-class ShoppingCartsInterpreter private(repo: ShoppingCartRepository)
-  extends ShoppingCarts[ScRepoState] {
-  // Functions implementation
+trait Logging[F[_]] {
+  def error(e: Throwable): F[Unit]
 }
 
+/**
+ * Test
+ */
+
+type MonadThrowable[F[_]] = MonadError[F, Throwable]
+
+case class ShoppingCarts(
+                        profile: Map[UserId, UserProfile],
+                        orders: Map[UserId, List[Product]]
+                        )
+
+// the top typelevel is just a simplistic way of understanding the DB interaction
+type ScRepository = Map[String, ShoppingCart]
+// the below typelevel had to be altered to ensure that
+type ScRepoState[A] = EitherT[State[ScRepository, ?], Throwable, A]
+
+
+
+/**
+ * Smart Constructor Pattern
+ */
+class ShoppingCartsInterpreter (repo: ScRepository) {
+    def combineFindAndCreateRecentSc[F[_] : MonadThrowable : Create : Find : FinalSc](userId: UserId):
+      F[ScInformation] = {
+        val result = for {
+          oldOrders <- Create[F].create(userId)
+          newOrders <- Find[F].find(userId)
+        } yield ScInformation.from(oldOrders, newOrders)
+
+        result.onError {
+          case e => Logging[F].error(e)
+    }
+  }
+}
+
+// Note that the Smart Constructor Pattern utilises companion objects & factory make methods
 object ShoppingCartsInterpreter {
   def make(): ShoppingCartsInterpreter = {
     new ShoppingCartsInterpreter(repository)
   }
-  private val repository: ShoppingCartRepository = Map()
+  private val repository: ScRepository = Map(
+  // TODO )
 }
 
 /**
@@ -51,8 +89,12 @@ object ShoppingCartsInterpreter {
 //  }
 //}
 
-// Remember that the program simply combines multiple algebras
+/**
+ * Program
+ */
 object Program {
+
+  import cats._
 
   def createAndAddToCart[F[_]: Monad](product: Product, cartId: String)
   (implicit shoppingCarts: ShoppingCarts[F]): F[Option[ShoppingCart]] =
