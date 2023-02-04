@@ -42,19 +42,29 @@ type ScRepoState[A] = EitherT[State[ScRepository, ?], Throwable, A]
 /**
  * Smart Constructor Pattern
  */
+
+// the below implementation takes the above ScRepository and converts it should convert it into a state of ScRepoState
 class ShoppingCartsInterpreter (repo: ScRepository) {
-    def combineFindAndCreateRecentSc[F[_] : MonadThrowable : Create : Find : FinalSc](userId: UserId):
-      F[ScInformation] = {
+    def combineFindAndCreateRecentSc[F[_] : MonadThrowable : Create : Find : FinalSc : Logging](userId: UserId):
+      F[ScRepoState]: EitherT[State[ScRepository, ?], Throwable, A] = {
         val result = for {
           oldOrders <- Create[F].create(userId)
           newOrders <- Find[F].find(userId)
-        } yield ScInformation.from(oldOrders, newOrders)
+          // is this not returning a list of orders
+        } yield ScRepository.from(oldOrders, newOrders)
 
-        result.onError {
+        val Throw = result.onError {
           case e => Logging[F].error(e)
     }
+
+      val ScState = for {
+        stateResult <- StateT[Result]
+      } yield EitherT[]
   }
 }
+
+// Note that the above alters ScRepository and then returns ScInformation which isn't actually fed anywhere and the
+// below object takes an instance of 'repository' but we do not have an instance of this?
 
 // Note that the Smart Constructor Pattern utilises companion objects & factory make methods
 object ShoppingCartsInterpreter {
