@@ -35,7 +35,8 @@ case class ShoppingCarts(
 // the top typelevel is just a simplistic way of understanding the DB interaction
 type ScRepository = Map[String, ShoppingCart]
 // the below typelevel had to be altered to ensure that
-type ScRepoState[A] = EitherT[State[ScRepository, ?], Throwable, A]
+type ScRepoState[A] = State[ScRepository, A]
+type ScThrowState[A] = EitherT[ScRepoState, Throwable, A]
 
 
 
@@ -46,20 +47,23 @@ type ScRepoState[A] = EitherT[State[ScRepository, ?], Throwable, A]
 // the below implementation takes the above ScRepository and converts it should convert it into a state of ScRepoState
 class ShoppingCartsInterpreter (repo: ScRepository) {
     def combineFindAndCreateRecentSc[F[_] : MonadThrowable : Create : Find : FinalSc : Logging](userId: UserId):
-      F[ScRepoState]: EitherT[State[ScRepository, ?], Throwable, A] = {
+      F[ScRepoState] = {
         val result = for {
           oldOrders <- Create[F].create(userId)
           newOrders <- Find[F].find(userId)
           // is this not returning a list of orders
-        } yield ScRepository.from(oldOrders, newOrders)
+        } yield State(ScRepository.from(oldOrders, newOrders))
 
         val Throw = result.onError {
           case e => Logging[F].error(e)
     }
 
-      val ScState = for {
-        stateResult <- StateT[Result]
-      } yield EitherT[]
+      val ScThrowState = for {
+        // remember that for the below method, the input parameters should be both the shopping cart and the product but the product isn't being fed in
+        finalState <- FinalSc[F].add(ScRepoState, userId)
+
+        // what are we trying to achieve by feeding in the throw here?
+      } yield ScThrowstate(finalState, Throw)
   }
 }
 
