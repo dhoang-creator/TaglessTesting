@@ -3,7 +3,7 @@ import cats.MonadError
 import cats.data.{EitherT, State}
 
 
-object TaglessFinalProd {
+object TaglessFinalProductionInterpreter {
 
 /**
  * By splitting the Algebra/Interface into component parts, it allows us to compartmentalise the IO Testing
@@ -39,6 +39,7 @@ case class ShoppingCarts(
 type ScRepository = Map[UserId, ShoppingCart]
 // here, we're trying to encapsulate the data that is being created from this application and the typelevel directly below that is to ensure that we're testing both if state is present or not
 type ScRepoState[A] = State[ScRepository, A]
+// we have yet to use the errorLogging to check the EitherT state of the ShoppingCart
 type ScThrowState[A] = EitherT[ScRepoState, Throwable, A]
 
 
@@ -93,40 +94,32 @@ object Program {
 
   import cats._
 
-  // this looks like the correct steps for returning
+  // this looks like the correct steps for returning -> trying to differentiate between the Sc object and the corresponding data type but this needs to be honed in on at some point
   def createAndAddToCart[F[_]: Monad](product: Product, cartId: Int)
-                                     (implicit shoppingCart: ShoppingCart):
-       F[Option[ShoppingCart]] =
+                                     (implicit shoppingCart: ShoppingCarts):
+       F[Option[ShoppingCarts]] =
       for {
         _ <- ShoppingCart.create(cartId)
         maybeSc <- ShoppingCart.find(cartId)
         maybeNewSc <- maybeSc.traverse(sc => ShoppingCart.add(sc, product))
       } yield maybeNewSc
-
-  // huh?!? why do we have two of the same methods here?
-  def createAndToCart[F[_]: Monad](product: Product, cartId: String)
-                                  (implicit shoppingCart: ShoppingCart):
-      F[Option[ShoppingCart]] =
-    for {
-      _ <- ShoppingCart.create(cartId)
-      maybeSc <- ShoppingCarts.find(cartId)
-      maybeNewSc <- maybeSc.traverse(sc => ShoppingCarts[F].add(sc, product))
-    } yield maybeNewSc
 }
 
+  // would there by any confusion between the ShoppingCart object and the generic data type object that we're earmarking below?
 object ShoppingCarts[A] {
-  def apply[F[_]](implicit sc: ShoppingCarts[F]): ShoppingCarts[F] = sc
+  def apply[F[_]](implicit sc: ShoppingCart[F]): ShoppingCart[F] = sc
 }
 
-// got to this far with the code review
-case class ProgramWithDep[F[_] : Monad](carts: ShoppingCarts[F]) {
-  def createAndToCart(product: Product, cartId: String): F[Option[ShoppingCart]] = {
+// note that you can in fact create an object which corresponds to a case class
+case class Program[F[_] : Monad](carts: ShoppingCarts[F]) {
+  override def createAndAddToCart(product: Product, cartId: String): F[Option[ShoppingCart]] = {
     _ <- carts.create(cartId)
     maybeSc <- carts.find(cartId)
     maybeNewSc <- maybeSc.traverse(sc => carts.add(sc, product))
   } yield maybeNewSc
 }
 
+// the below should evidently be the final step of the application program
 val program: ProgramWithDep[ScRepoState] = ProgramWithDep {
   ShoppingCartWithDependencyInterpreter.make()
 }
