@@ -1,5 +1,5 @@
-import Cart.ShoppingCart.{ShoppingCart, UserId, UserProfile}
-import TaglessFinalProductionInterpreter.ScRepository
+import TaglessTest.{ShoppingCart, UserId, UserProfile}
+import TaglessFinalInterpreter.ScRepository
 import cats.MonadError
 import cats.data.{EitherT, State}
 
