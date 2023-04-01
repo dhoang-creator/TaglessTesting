@@ -1,4 +1,4 @@
-import TaglessTest
+import Repository
 import TaglessFinalInterpreter._
 
 object Main {
@@ -36,7 +36,7 @@ object Main {
   }
 
   // the below should evidently be the final step of the application program
-  val program: ProgramWithDep[ScRepoState] = ProgramWithDep {
+  val program: ProgramWithDep[RepositoryState] = ProgramWithDep {
     ShoppingCartWithDependencyInterpreter.make()
 
     program.createAndToCart(Product("id", "a product"), "cart1")

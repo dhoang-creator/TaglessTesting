@@ -1,9 +1,9 @@
-import TaglessTest.{ShoppingCart, UserId, UserProfile}
-import TaglessFinalInterpreter.ScRepository
+import Repository.{ShoppingCart, UserId, UserProfile}
+import TaglessFinalInterpreter.ShoppingCartRepository
 import cats.MonadError
 import cats.data.{EitherT, State}
 
-object TaglessFinalTestingInterpreter {
+object TestInterpreter {
 
   trait Create[F[_]] {
     def create(userId: UserId): F[Unit]
@@ -24,7 +24,7 @@ object TaglessFinalTestingInterpreter {
   type MonadThrowable[F[_]] = MonadError[F, Throwable]
 
   // we've imported the dependency from the 'Production Interpreter' -> will this cause a cluster fuck of the dependency injection?
-    def combineFindAndCreateRecentSc[F[_] : MonadThrowable : Create : Find : FinalSc : Logging](repo: ScRepository, userId: UserId):
+    def combineFindAndCreateRecentSc[F[_] : MonadThrowable : Create : Find : FinalSc : Logging](repo: ShoppingCartRepository, userId: UserId):
     F[NewRepoState] = {
       val result = for {
         oldOrders <- Create[F].create(userId)

@@ -1,61 +1,43 @@
 import TaglessFinalInterpreter.ShoppingCartsInterpreter
-import TaglessTest.{ShoppingCart, UserId, UserProfile}
+import Repository.{ShoppingCart, UserId, UserProfile}
 import cats.MonadError
 import cats.data.{EitherT, State}
 
+// are we not simply gravitating towards a MVC Centric Application?
 
-object TaglessFinalInterpreter {
-
-/**
- * By splitting the Algebra/Interface into component parts, it allows us to compartmentalise the IO Testing
- */
-trait Create[F[_]] {
-  def create(userId: UserId): F[Unit]
-}
-
-trait FindId[F[_]] {
-  def find(userId: Option[UserId]): F[Option[ShoppingCart]]
-}
-
-trait FinalSc[F[_]] {
-    def findSc(userId: Option[UserId]): F[Option[ShoppingCart]]
-    def add(sc: ShoppingCart, product: Product): F[ShoppingCart]
-}
-
-trait Logging[F[_]] {
-  def error(e: Throwable): F[Unit]
-}
+// should we contain the traits and the types inside an overall object -> this needs to be looked up
+object TaglessFinalInterpreter extends RepoModelTraits {
 
 /**
  * Production Interpreter
  */
 
-type MonadThrowable[F[_]] = MonadError[F, Throwable]
-
+// why do we have a Map[K, V] for the below format when we already have a ShoppingCart model in the RepoModels?
 case class ShoppingCarts(
-                        // we don't make use of the UserProfile below
-                        profile: Map[UserId, UserProfile],
+                        // let's keep it simple with just an 'orders' Map[K,V]
                         orders: Map[UserId, List[Product]]
                         )
 
-// shouldn't this make use of the above case class 'ShoppingCarts' but then we have a Map within a map and this will need to be flat mapped?
-type ScRepository = Map[UserId, ShoppingCart]
+type ShoppingCartRepository = Map[UserId, ShoppingCarts]
 
-type ScRepoState[A] = State[ScRepository, A]
+type RepositoryState[A] = State[ShoppingCartRepository, A]
 
 // Monadic Either Alias
-type ScThrowState[A] = EitherT[ScRepoState, Throwable, A]
+type RepoThrowableState[A] = EitherT[RepositoryState, Throwable, A]
 
-  
+  // do this and the above not simply conflict? ->
+  type MonadThrowable[F[_]] = MonadError[F, Throwable]
+
+
 /**
  * Smart Constructor Pattern
  */
 
 // the below implementation takes the above ScRepository and converts it into a state of ScRepoState which can be used later in the testing
-class ShoppingCartsInterpreter (repo: ScRepository)(userId: UserId) {
-    def combineFindAndCreateRecentSc[F[_] : MonadThrowable : Create : FindId : FinalSc : Logging](repo: ScRepository, userId: UserId):
+class ShoppingCartsInterpreter(repo: ShoppingCartRepository)(userId: UserId) {
+    def combineFindAndCreateRecentSc[F[_] : MonadThrowable : Create : FindUserId : FinalShoppingCartState : ErrorLogging](repo: ShoppingCartRepository, userId: UserId):
       // we're returning a generic of the RepoState which also contains a generic -> which generic should we be wrapping?
-      F[ScRepoState[A]] = {
+      F[RepositoryState[A]] = {
         val orders = match A {
           // how do we return the above Monadic Either Alias
           case e => Logging[F].error(e)

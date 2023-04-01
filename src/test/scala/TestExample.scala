@@ -1,4 +1,4 @@
-object TestEnv {
+object TestExample {
 
   // these are the three algebras which we'll be using later
   trait Users[F[_]] {
