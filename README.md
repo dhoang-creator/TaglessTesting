@@ -38,8 +38,4 @@ And Tagless Final allows us to model this.
 * Github: [@dhoang-creator](https://github.com/dhoang-creator)
 * LinkedIn: [@https:\/\/www.linkedin.com\/in\/duy-hoang-155930262\/](https://linkedin.com/in/https:\/\/www.linkedin.com\/in\/duy-hoang-155930262\/)
 
-## Show your support
-
-Give a ⭐️ if this project helped you!
-
 ## License
