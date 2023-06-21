@@ -13,18 +13,17 @@ Tagless Final Testing is a template allowing Functional Programmers to test thei
 
 Although originally conceived to be a Dependency Injection Pattern to resolve the Expression Problem found within FP, Tagless Final's structure of Algebras, Interpreters and Programs allow for a modular approach to testing.
 
-  
+
+</div>
+
 ## <a name='TOC'>Table of Contents</a>
 
-- [Introduction](#introduction)
-    - [Use Cases](#use_cases)
+- [Use Cases & Context](#use_cases_&_context)
 
 - [Getting Started](#getting_started)
 
 - [Credits](#credits)
     - [Licence](#licence)
-
-</div>
 
 ## Use Cases & Context
 
