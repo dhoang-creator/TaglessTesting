@@ -13,6 +13,17 @@ Tagless Final Testing is a template allowing Functional Programmers to test thei
 
 Although originally conceived to be a Dependency Injection Pattern to resolve the Expression Problem found within FP, Tagless Final's structure of Algebras, Interpreters and Programs allow for a modular approach to testing.
 
+  
+## <a name='TOC'>Table of Contents</a>
+
+- [Introduction](#introduction)
+    - [Use Cases](#use_cases)
+
+- [Getting Started](#getting_started)
+
+- [Credits](#credits)
+    - [Licence](#licence)
+
 </div>
 
 ## Use Cases & Context
@@ -27,9 +38,9 @@ By pushing the business logic to the centre of the application ('Functional Core
 
 And Tagless Final allows us to model this. 
 
-## Installation
-
 ## Getting Started
+
+Introduction to format and layout of the project.
 
 ## Credits
 
@@ -39,3 +50,11 @@ And Tagless Final allows us to model this.
 * LinkedIn: [@https:\/\/www.linkedin.com\/in\/duy-hoang-155930262\/](https://linkedin.com/in/https:\/\/www.linkedin.com\/in\/duy-hoang-155930262\/)
 
 ## License
+
+Copyright (c) 2023 - 2033 Duy Hoang and others
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
